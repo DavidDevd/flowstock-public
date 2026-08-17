@@ -1,0 +1,19 @@
+{
+  "name": "flowstock",
+  "version": "0.3.0",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "audit": "pnpm audit --audit-level high",
+    "build": "pnpm --filter @flowstock/web build",
+    "format": "pnpm --filter @flowstock/web format",
+    "format:check": "pnpm --filter @flowstock/web format:check",
+    "lint": "pnpm --filter @flowstock/web lint",
+    "test": "pnpm --filter @flowstock/web test",
+    "test:coverage": "pnpm --filter @flowstock/web test:coverage",
+    "typecheck": "pnpm --filter @flowstock/web typecheck"
+  }
+}

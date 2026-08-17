@@ -1,0 +1,157 @@
+name: flowstock-development
+
+services:
+  postgres:
+    image: postgres:17-bookworm@sha256:4f736ae292687621d4dbe0d499ffd024a36bd2ee7d8ca6f2ccd4c800f047b394
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB is required}
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER is required}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+    networks:
+      - data
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/api.Dockerfile
+    environment:
+      FLOWSTOCK_ALLOWED_HOSTS: localhost,127.0.0.1,api,edge
+      FLOWSTOCK_DATABASE_URL: ${FLOWSTOCK_DATABASE_URL:?FLOWSTOCK_DATABASE_URL is required}
+      FLOWSTOCK_ENVIRONMENT: ${FLOWSTOCK_ENVIRONMENT:-development}
+      FLOWSTOCK_LOG_LEVEL: ${FLOWSTOCK_LOG_LEVEL:-INFO}
+      FLOWSTOCK_OTEL_ENABLED: ${FLOWSTOCK_OTEL_ENABLED:-false}
+      FLOWSTOCK_OTEL_EXPORTER_ENDPOINT: ${FLOWSTOCK_OTEL_EXPORTER_ENDPOINT:-}
+      FLOWSTOCK_SECRET_HASH_KEY: ${FLOWSTOCK_SECRET_HASH_KEY:?FLOWSTOCK_SECRET_HASH_KEY is required}
+      FLOWSTOCK_DATA_ENCRYPTION_KEY: ${FLOWSTOCK_DATA_ENCRYPTION_KEY:?FLOWSTOCK_DATA_ENCRYPTION_KEY is required}
+      FLOWSTOCK_RUN_MIGRATIONS: "true"
+      FLOWSTOCK_TRUSTED_PROXY_IPS: 172.16.0.0/12
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health/ready', timeout=2)",
+        ]
+      interval: 10s
+      timeout: 3s
+      retries: 12
+    networks:
+      - application
+      - data
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+
+  web:
+    build:
+      context: ../..
+      dockerfile: deployment/docker/web.Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - application
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /var/cache/nginx:size=32m
+      - /var/run:size=8m
+
+  edge:
+    image: caddy:2.10.0-alpine@sha256:ae4458638da8e1a91aafffb231c5f8778e964bca650c8a8cb23a7e8ac557aa3c
+    cap_add:
+      - NET_BIND_SERVICE
+    cap_drop:
+      - ALL
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_healthy
+    networks:
+      - host-access
+      - application
+    ports:
+      - "127.0.0.1:${FLOWSTOCK_EDGE_PORT:-8080}:8080"
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /config:size=16m
+      - /data:size=32m
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+
+  prometheus:
+    image: prom/prometheus:v3.5.0@sha256:63805ebb8d2b3920190daf1cb14a60871b16fd38bed42b857a3182bc621f4996
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - application
+    profiles:
+      - observability
+    read_only: true
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=16m
+    volumes:
+      - ../observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+
+  grafana:
+    image: grafana/grafana:12.0.2@sha256:b5b59bfc7561634c2d7b136c4543d702ebcc94a3da477f21ff26f89ffd4214fa
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD is required}
+      GF_USERS_ALLOW_SIGN_UP: "false"
+    depends_on:
+      - prometheus
+    networks:
+      - host-access
+      - application
+    ports:
+      - "127.0.0.1:${GRAFANA_PORT:-3000}:3000"
+    profiles:
+      - observability
+    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - ../observability/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - grafana-data:/var/lib/grafana
+
+networks:
+  host-access:
+  application:
+    internal: true
+  data:
+    internal: true
+
+volumes:
+  grafana-data:
+  postgres-data:
+  prometheus-data:

@@ -1,0 +1,19 @@
+name: flowstock-acceptance
+
+services:
+  api:
+    environment:
+      FLOWSTOCK_ENVIRONMENT: acceptance
+      FLOWSTOCK_ALLOWED_HOSTS: localhost,127.0.0.1,api,edge
+
+  edge:
+    ports:
+      - "127.0.0.1:${FLOWSTOCK_EDGE_PORT:-8081}:8080"
+
+volumes:
+  grafana-data:
+    name: flowstock-acceptance-grafana
+  postgres-data:
+    name: flowstock-acceptance-postgres
+  prometheus-data:
+    name: flowstock-acceptance-prometheus
