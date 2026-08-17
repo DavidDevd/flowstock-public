@@ -187,3 +187,7 @@ See [Public roadmap](docs/roadmap.md).
 ## Status
 
 FlowStock is under active development. This repository is an engineering snapshot, not a production claim and not evidence of active customers or users.
+
+## Usage and rights
+
+This repository is shared for portfolio demonstration and technical evaluation. No open-source license is granted; copying, modifying, redistributing or sublicensing the code requires prior permission.

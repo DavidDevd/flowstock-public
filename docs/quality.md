@@ -24,4 +24,4 @@ The repository defines these automated gates:
 | Frontend format, lint, typecheck and build | Passed |
 | pnpm dependency audit | No known vulnerabilities |
 
-Container, Trivy and SBOM evidence is inherited from the green `main` run at source commit `66bc8221fc62111464f13db98c819609321d3653`. Container build inputs are byte-equivalent in this snapshot; the local validation environment does not provide a container engine.
+The `FlowStock CI` workflow independently validates the Compose definitions, builds the API and web images, scans both images with Trivy for HIGH and CRITICAL findings, generates SPDX SBOMs and retains the resulting container evidence as workflow artifacts.
