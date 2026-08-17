@@ -121,19 +121,11 @@ See [Observability](docs/observability.md).
 | Observability | Prometheus, Grafana, structlog, OpenTelemetry |
 | Supply chain | pip-audit, pnpm audit, Trivy, SPDX SBOM |
 
-## Screenshots
+## Product vision and implementation boundary
 
-Real screenshots will be added after a separate data-sanitization review.
+Concept demonstrations may explore future product capabilities, but they are not evidence of implemented behavior. This repository, its source code and its automated validation are the source of truth for the capabilities currently available.
 
-| Authenticated workspace | Products |
-| --- | --- |
-| _Screenshot pending_ | _Screenshot pending_ |
-
-| Customers | User management |
-| --- | --- |
-| _Screenshot pending_ | _Screenshot pending_ |
-
-Dashboards are not shown because that increment is still planned.
+Dashboards, inventory operations, purchasing, sales and later product milestones remain planned unless explicitly identified as implemented in this repository.
 
 ## Public project structure
 
