@@ -14,7 +14,7 @@ COPY apps/web apps/web
 COPY packages packages
 RUN pnpm --filter @flowstock/web build
 
-FROM nginx:1.30.4-alpine3.24@sha256:97d490c12ba55b4946b01546d1c3ed324e8d41ab1c9fcb2a616aa470620e5b46 AS runtime
+FROM nginx:1.31-alpine3.24@sha256:62ff2089abf5a9ed33bd232895bef5e22f7bb4b200675cec49a5ebc48e3d4ac8 AS runtime
 
 COPY deployment/docker/web-nginx.conf /etc/nginx/conf.d/default.conf
 COPY --from=builder /build/apps/web/dist /usr/share/nginx/html
