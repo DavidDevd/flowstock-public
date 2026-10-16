@@ -11,7 +11,7 @@ dependencies = [
   "alembic==1.18.5",
   "argon2-cffi==25.1.0",
   "cryptography==50.0.0",
-  "fastapi==0.140.0",
+  "fastapi==0.141.1",
   "opentelemetry-api==1.44.0",
   "opentelemetry-exporter-otlp-proto-http==1.44.0",
   "opentelemetry-instrumentation-fastapi==0.65b0",
